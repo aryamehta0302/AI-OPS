@@ -1,42 +1,86 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+* {
+  box-sizing: border-box;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+body {
+  margin: 0;
+  background-color: #f2f4f7;
+  font-family: "Segoe UI", Arial, sans-serif;
+  color: #2c3e50;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.dashboard {
+  width: 100%;
+  min-height: 100vh;
+  padding: 24px 48px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+/* Header */
+.header {
+  font-size: 26px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: #1f2937;
 }
 
+/* Row layout */
+.row {
+  display: flex;
+  gap: 24px;
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.row > * {
+  flex: 1;
+}
+
+/* Sections */
+.section {
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+/* Card */
 .card {
-  padding: 2em;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-.read-the-docs {
-  color: #888;
+.card h3 {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  color: #374151;
+}
+
+/* Health colors */
+.value {
+  font-size: 32px;
+  font-weight: bold;
+}
+
+.normal {
+  color: #16a34a;
+}
+
+.warning {
+  color: #f59e0b;
+}
+
+.critical {
+  color: #dc2626;
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+  .dashboard {
+    padding: 16px;
+  }
+
+  .row {
+    flex-direction: column;
+  }
 }

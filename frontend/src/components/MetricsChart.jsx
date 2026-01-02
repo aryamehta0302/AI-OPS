@@ -7,16 +7,22 @@ import {
   ResponsiveContainer
 } from "recharts";
 
-const MetricsChart = ({ data, dataKey, color, title }) => {
+const MetricsChart = ({ title, data, dataKey, color }) => {
   return (
-    <div style={{ width: "100%", height: 250 }}>
+    <div className="card">
       <h3>{title}</h3>
-      <ResponsiveContainer>
+      <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data}>
-          <XAxis dataKey="time" />
-          <YAxis />
+          <XAxis dataKey="time" hide />
+          <YAxis domain={[0, 100]} />
           <Tooltip />
-          <Line type="monotone" dataKey={dataKey} stroke={color} dot={false} />
+          <Line
+            type="monotone"
+            dataKey={dataKey}
+            stroke={color}
+            strokeWidth={2}
+            dot={false}
+          />
         </LineChart>
       </ResponsiveContainer>
     </div>
