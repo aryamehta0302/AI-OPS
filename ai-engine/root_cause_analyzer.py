@@ -41,12 +41,13 @@ class RootCauseAnalyzer:
             "network_rate": "NETWORK"
         }
 
-        # 🔑 Metric-aware weights (ops domain knowledge)
+        # 🔑 Metric-aware weights - CPU FOCUSED
+        # CPU is the primary concern, network fluctuations are normal
         self.metric_weights = {
-            "cpu": 1.0,
-            "memory": 1.8,        # Memory exhaustion is critical
-            "disk": 1.2,
-            "network_rate": 0.8  # Network is noisy
+            "cpu": 2.5,          # CPU is PRIMARY focus - highest weight
+            "memory": 1.5,       # Memory matters for stability
+            "disk": 0.8,         # Disk is generally stable
+            "network_rate": 0.1  # Network fluctuations are NORMAL, ignore mostly
         }
 
     def update(self, metrics: dict):

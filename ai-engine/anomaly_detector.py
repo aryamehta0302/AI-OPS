@@ -3,6 +3,7 @@ from river import anomaly, preprocessing
 class StreamingAnomalyDetector:
     """
     Online anomaly detector using River's Half-Space Trees
+    OPTIMIZED: Focus on CPU issues, network fluctuations are normal
     """
 
     def __init__(self):
@@ -15,15 +16,16 @@ class StreamingAnomalyDetector:
 
     def process(self, metrics: dict) -> float:
         """
-        Takes one metrics record and returns anomaly score
+        Takes one metrics record and returns anomaly score.
+        CPU is weighted heavily, network is minimized (fluctuations are normal).
         """
 
+        # FOCUSED: CPU gets high weight, network gets minimal weight
         features = {
-            "cpu": metrics["cpu"]["usage_percent"],
-            "memory": metrics["memory"]["usage_percent"],
-            "disk": metrics["disk"]["usage_percent"],
-            "net_sent": metrics["network"]["bytes_sent"],
-            "net_recv": metrics["network"]["bytes_received"],
+            "cpu": metrics["cpu"]["usage_percent"] * 2.0,        # CPU is PRIMARY focus
+            "memory": metrics["memory"]["usage_percent"] * 1.2,  # Memory matters
+            "disk": metrics["disk"]["usage_percent"] * 0.8,      # Disk is stable
+            # Network excluded - fluctuations are normal and don't indicate problems
         }
 
         score = self.model.score_one(features)

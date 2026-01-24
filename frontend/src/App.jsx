@@ -2,83 +2,210 @@ import { useEffect, useState } from "react";
 import socket from "./services/socket";
 import "./App.css";
 
+import NodeSelector from "./components/NodeSelector";
+import NodeGrid from "./components/NodeGrid";
 import HealthCard from "./components/HealthCard";
 import RootCauseCard from "./components/RootCauseCard";
+import PredictionCard from "./components/PredictionCard";
 import IncidentTimeline from "./components/IncidentTimeline";
 import MetricsChart from "./components/MetricsChart";
 import ContributorsBar from "./components/ContributorsBar";
+import AlertBanner from "./components/AlertBanner";
 
 function App() {
-  const [metrics, setMetrics] = useState([]);
-  const [health, setHealth] = useState(null);
-  const [rootCause, setRootCause] = useState(null);
+  // Multi-node state: { node_id: { metrics, health, rootCause, prediction, history } }
+  const [nodes, setNodes] = useState({});
+  const [selectedNode, setSelectedNode] = useState("all");
   const [incidents, setIncidents] = useState([]);
+  const [latestAlert, setLatestAlert] = useState(null);
+  // FIXED: Initialize with actual socket connection state
+  const [connected, setConnected] = useState(socket.connected);
 
   useEffect(() => {
-    socket.on("system_metrics", (data) => {
-      setHealth(data.system_health);
-      setRootCause(data.root_cause);
+    // FIXED: Check current connection state on mount (in case already connected)
+    if (socket.connected) {
+      setConnected(true);
+    }
 
-      setMetrics((prev) => [
-        ...prev.slice(-30),
-        {
-          time: new Date().toLocaleTimeString(),
-          cpu: data.cpu.usage_percent,
-          memory: data.memory.usage_percent
-        }
-      ]);
+    socket.on("connect", () => {
+      console.log("[Socket] Connected to backend");
+      setConnected(true);
+    });
+
+    socket.on("disconnect", () => {
+      console.log("[Socket] Disconnected from backend");
+      setConnected(false);
+    });
+
+    socket.on("system_metrics", (data) => {
+      const nodeId = data.node_id || "local";
+      
+      setNodes((prev) => {
+        const existing = prev[nodeId] || { history: [] };
+        const newHistory = [
+          ...existing.history.slice(-30),
+          {
+            time: new Date().toLocaleTimeString(),
+            cpu: data.cpu?.usage_percent || 0,
+            memory: data.memory?.usage_percent || 0,
+            disk: data.disk?.usage_percent || 0
+          }
+        ];
+
+        return {
+          ...prev,
+          [nodeId]: {
+            node_id: nodeId,
+            hostname: data.hostname || nodeId,
+            metrics: data,
+            health: data.system_health,
+            rootCause: data.root_cause,
+            prediction: data.prediction,
+            history: newHistory,
+            lastSeen: Date.now(),
+            connectionStatus: "CONNECTED"  // Mark as connected when receiving metrics
+          }
+        };
+      });
+    });
+
+    // FIXED: Handle per-node connection status updates from backend
+    socket.on("node_status_update", (data) => {
+      const { node_id, status } = data;
+      
+      setNodes((prev) => {
+        if (!prev[node_id]) return prev;
+        
+        return {
+          ...prev,
+          [node_id]: {
+            ...prev[node_id],
+            connectionStatus: status,
+            lastSeen: data.lastSeen || prev[node_id].lastSeen
+          }
+        };
+      });
     });
 
     socket.on("incident_event", (incident) => {
-      setIncidents((prev) => [incident, ...prev].slice(0, 10));
+      setIncidents((prev) => [incident, ...prev].slice(0, 20));
+      setLatestAlert(incident);
     });
 
     return () => {
+      socket.off("connect");
+      socket.off("disconnect");
       socket.off("system_metrics");
       socket.off("incident_event");
+      socket.off("node_status_update");  // Cleanup new listener
     };
   }, []);
 
+  // Get list of active node IDs
+  const nodeIds = Object.keys(nodes);
+
+  // Get data for selected node or aggregate
+  const getSelectedData = () => {
+    if (selectedNode === "all" || !nodes[selectedNode]) {
+      // Return first available node for display, or null
+      const firstNode = nodeIds.length > 0 ? nodes[nodeIds[0]] : null;
+      return firstNode;
+    }
+    return nodes[selectedNode];
+  };
+
+  // Filter incidents by selected node
+  const filteredIncidents = selectedNode === "all" 
+    ? incidents 
+    : incidents.filter(inc => inc.node_id === selectedNode);
+
+  const selectedData = getSelectedData();
+
   return (
     <div className="dashboard">
-      <div className="header">AI Ops System Health Dashboard</div>
+      {/* Alert Banner */}
+      <AlertBanner 
+        alert={latestAlert} 
+        onDismiss={() => setLatestAlert(null)} 
+      />
 
-      {/* SUMMARY */}
-      <div className="row">
-        <HealthCard health={health} />
-        <RootCauseCard rootCause={rootCause} />
+      {/* Header */}
+      <div className="header">
+        <div className="header-title">
+          <span className="header-icon"></span>
+          AIOPS SYSTEM HEALTH PLATFORM
+        </div>
+        <div className="header-status">
+          <span className="status-label">ENGINE STATUS</span>
+          <div className={`status-indicator ${connected ? "online" : "offline"}`}>
+            <span className="status-dot"></span>
+            {connected ? "ONLINE" : "OFFLINE"}
+          </div>
+        </div>
       </div>
 
-      {/* CONTRIBUTORS */}
-      {rootCause?.contributors && (
-        <div className="section">
-          <ContributorsBar contributors={rootCause.contributors} />
-        </div>
+      {/* Node Selector */}
+      <NodeSelector 
+        nodes={nodeIds}
+        selected={selectedNode}
+        onSelect={setSelectedNode}
+        nodeData={nodes}
+      />
+
+      {/* Node Grid - Shows all nodes when "all" selected */}
+      {selectedNode === "all" && nodeIds.length > 0 && (
+        <NodeGrid nodes={nodes} onSelectNode={setSelectedNode} />
       )}
 
-      {/* INCIDENTS */}
+      {/* Single Node Details */}
+      {selectedNode !== "all" && selectedData && (
+        <>
+          {/* Summary Cards */}
+          <div className="row">
+            <HealthCard health={selectedData.health} nodeId={selectedNode} />
+            <RootCauseCard rootCause={selectedData.rootCause} />
+            <PredictionCard prediction={selectedData.prediction} />
+          </div>
+
+          {/* Contributors */}
+          {selectedData.rootCause?.contributors && (
+            <div className="section">
+              <ContributorsBar contributors={selectedData.rootCause.contributors} />
+            </div>
+          )}
+
+          {/* Charts */}
+          <div className="row">
+            <MetricsChart
+              title="CPU UTILIZATION"
+              data={selectedData.history}
+              dataKey="cpu"
+              color="#00d4ff"
+            />
+            <MetricsChart
+              title="MEMORY UTILIZATION"
+              data={selectedData.history}
+              dataKey="memory"
+              color="#a855f7"
+            />
+          </div>
+        </>
+      )}
+
+      {/* Incidents */}
       <div className="section">
-        <IncidentTimeline incidents={incidents} />
+        <IncidentTimeline incidents={filteredIncidents} showNodeId={selectedNode === "all"} />
       </div>
 
-      {/* CHARTS */}
-      <div className="section">
-        <MetricsChart
-          title="CPU Usage (%)"
-          data={metrics}
-          dataKey="cpu"
-          color="#3498db"
-        />
-      </div>
-
-      <div className="section">
-        <MetricsChart
-          title="Memory Usage (%)"
-          data={metrics}
-          dataKey="memory"
-          color="#9b59b6"
-        />
-      </div>
+      {/* Empty State */}
+      {nodeIds.length === 0 && (
+        <div className="empty-dashboard">
+          <div className="empty-icon"></div>
+          <h2>AWAITING NODE CONNECTIONS</h2>
+          <p>Start monitoring agents to begin system analysis</p>
+          <code>python agent.py --node-id PC-1</code>
+        </div>
+      )}
     </div>
   );
 }

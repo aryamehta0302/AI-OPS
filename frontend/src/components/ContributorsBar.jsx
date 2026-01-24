@@ -1,8 +1,8 @@
 const colorMap = {
-  CPU: "#3498db",
-  MEMORY: "#9b59b6",
-  DISK: "#f1c40f",
-  NETWORK: "#1abc9c"
+  CPU: "#00d4ff",
+  MEMORY: "#a855f7",
+  DISK: "#fbbf24",
+  NETWORK: "#14b8a6"
 };
 
 const ContributorsBar = ({ contributors }) => {
@@ -10,34 +10,39 @@ const ContributorsBar = ({ contributors }) => {
     return null;
   }
 
+  // Sort by contribution (highest first)
+  const sorted = Object.entries(contributors).sort((a, b) => b[1] - a[1]);
+
   return (
     <div className="card">
-      <h3>Metric Contribution</h3>
+      <h3>METRIC CONTRIBUTION</h3>
 
-      {Object.entries(contributors).map(([key, value]) => (
-        <div key={key} style={{ marginBottom: "10px" }}>
-          <div style={{ fontSize: "14px", marginBottom: "4px" }}>
-            {key} — {Math.round(value * 100)}%
-          </div>
+      <div className="contributors-grid">
+        {sorted.map(([key, value]) => (
+          <div key={key} className="contributor-item">
+            <div className="contributor-header">
+              <span className={`contributor-icon ${key.toLowerCase()}`}></span>
+              <span className="contributor-name">{key}</span>
+              <span 
+                className="contributor-percent"
+                style={{ color: colorMap[key] || "#94a3b8" }}
+              >
+                {Math.round(value * 100)}%
+              </span>
+            </div>
 
-          <div
-            style={{
-              height: "10px",
-              background: "#e0e0e0",
-              borderRadius: "6px",
-              overflow: "hidden"
-            }}
-          >
-            <div
-              style={{
-                width: `${value * 100}%`,
-                height: "100%",
-                background: colorMap[key] || "#95a5a6"
-              }}
-            />
+            <div className="contributor-bar-bg">
+              <div
+                className="contributor-bar-fill"
+                style={{
+                  width: `${value * 100}%`,
+                  background: colorMap[key] || "#94a3b8"
+                }}
+              />
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 };

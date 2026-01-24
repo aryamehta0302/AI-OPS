@@ -51,6 +51,16 @@ __pycache__/
 .venv/
 venv/
 env/
+# Python virtual environments
+myenv/
+venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+
 pip-wheel-metadata/
 .python-version
 
