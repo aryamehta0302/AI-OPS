@@ -16,3 +16,7 @@ pandas==2.2.2
 
 # Utilities
 python-dotenv==1.0.1
+
+# HTTP client (for Ollama GenAI explanations)
+requests>=2.31.0
+httpx>=0.27.0

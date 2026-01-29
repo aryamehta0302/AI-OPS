@@ -1,115 +1,78 @@
-# AIOps System Health Platform
+# Multi-Agent Agentic AIOps Platform
 
-A real-time AI-powered operations monitoring platform with anomaly detection, health scoring, and root-cause analysis.
+Real-time **agentic AI operations monitoring** with autonomous decision-making, anomaly detection, and self-healing.
 
 ## Architecture
 
 ```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   Frontend      │────▶│    Backend      │────▶│   AI Engine     │
-│   (React)       │◀────│   (Node.js)     │◀────│   (FastAPI)     │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-     :3000              Socket.IO :5000          REST API :8001
+┌─────────────────┐     ┌─────────────────┐     ┌──────────────────────┐
+│   Frontend      │────▶│    Backend      │────▶│   AI Engine          │
+│   (React)       │◀────│   (Node.js)     │◀────│   (FastAPI)          │
+│                 │     │                 │     │                      │
+│  - Dashboard    │     │  - Socket.IO    │     │  - DecisionAgent ⭐  │
+│  - Agent UI     │     │  - Incidents    │     │  - Anomaly Detection │
+└─────────────────┘     └─────────────────┘     │  - Root Cause        │
+     :5173                   :5000               │  - Auto-Healing      │
+                                                 └──────────────────────┘
+                                                          :8001
 ```
 
-## Features
+## Project Structure
 
-- **Real-time System Monitoring** - CPU, Memory, Disk, Network metrics
-- **ML-based Anomaly Detection** - Using River's Half-Space Trees (streaming ML)
-- **Health Scoring** - Automatic health calculation with risk levels
-- **Root Cause Analysis** - AI-powered attribution with confidence scores
-- **Incident Timeline** - Track system state transitions
-- **Beautiful Dashboard** - Modern dark theme with real-time charts
+| Folder | Description |
+|--------|-------------|
+| [ai-engine/](ai-engine/README.md) | Python FastAPI server with DecisionAgent, anomaly detection, auto-healing |
+| [backend/](backend/README.md) | Node.js/Express server, Socket.IO, multi-node management |
+| [frontend/](frontend/README.md) | React dashboard with real-time metrics and agent decision visualization |
 
 ## Quick Start
 
-### 1. Start the AI Engine (Python)
-
+### 1. Start AI Engine
 ```bash
 cd ai-engine
-
-# Create virtual environment (first time only)
-python -m venv myenv
-myenv\Scripts\activate  # Windows
-# source myenv/bin/activate  # Linux/Mac
-
-# Install dependencies
+python -m venv myenv && myenv\Scripts\activate
 pip install -r requirements.txt
-
-# Run the AI engine
 uvicorn app:app --reload --port 8001
 ```
 
-### 2. Start the Backend (Node.js)
-
+### 2. Start Backend
 ```bash
 cd backend
-
-# Install dependencies
-npm install
-
-# Run the backend
-npm run dev
+npm install && npm run dev
 ```
 
-### 3. Start the Frontend (React)
-
+### 3. Start Frontend
 ```bash
 cd frontend
-
-# Install dependencies
-npm install
-
-# Run the frontend
-npm run dev
+npm install && npm run dev
 ```
 
-### 4. Open the Dashboard
-
-Visit `http://localhost:5173` in your browser.
-
-## Environment Variables
-
-### Backend (.env)
-```
-PORT=5000
-AI_ENGINE_URL=http://127.0.0.1:8001
-POLL_INTERVAL_MS=2000
+### 4. Run a PC Agent
+```bash
+cd ai-engine
+python agent.py --node-id PC-1
 ```
 
-### Frontend (.env)
-```
-VITE_BACKEND_URL=http://localhost:5000
-```
+**Dashboard:** http://localhost:5173
 
-## API Endpoints
+## What Makes This "Agentic AI"?
 
-### AI Engine (Port 8001)
+The **DecisionAgent** is an autonomous agent that:
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/health` | GET | Service health check |
-| `/metrics` | GET | Get system metrics with AI analysis |
+- ✅ **Perceives** - Ingests real-time metrics
+- ✅ **Remembers** - Maintains sliding window memory per node
+- ✅ **Reasons** - Analyzes trends, persistence, patterns
+- ✅ **Decides** - Makes autonomous decisions (ESCALATE, AUTO_HEAL, etc.)
+- ✅ **Acts** - Triggers safe healing actions
+- ✅ **Explains** - Provides full reasoning chains
 
-### Backend (Port 5000)
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/health` | GET | Backend health check |
-| `/incidents` | GET | Get incident timeline |
-
-### WebSocket Events
-
-| Event | Direction | Description |
-|-------|-----------|-------------|
-| `system_metrics` | Server → Client | Real-time metrics update |
-| `incident_event` | Server → Client | System state change alert |
+**The agent operates independently. No prompts. No human intervention.**
 
 ## Tech Stack
 
-- **Frontend**: React 19, Recharts, Socket.IO Client, Vite
-- **Backend**: Node.js, Express, Socket.IO
-- **AI Engine**: FastAPI, River ML, scikit-learn, psutil
+- **Frontend:** React 19, Recharts, Socket.IO Client, Vite
+- **Backend:** Node.js, Express, Socket.IO
+- **AI Engine:** FastAPI, River ML, scikit-learn, psutil
 
 ## License
 

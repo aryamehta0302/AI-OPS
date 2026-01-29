@@ -1,0 +1,307 @@
+/**
+ * Agent Decision Panel Styles
+ * Modern dark theme matching the dashboard
+ */
+
+.agent-panel {
+  background: linear-gradient(145deg, #1a1a2e 0%, #16162a 100%);
+  border-radius: 12px;
+  border: 1px solid #2d2d4a;
+  overflow: hidden;
+  min-width: 320px;
+}
+
+.agent-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  background: rgba(0, 212, 255, 0.08);
+  border-bottom: 1px solid #2d2d4a;
+}
+
+.agent-icon {
+  font-size: 1.3rem;
+}
+
+.agent-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #00d4ff;
+  flex: 1;
+}
+
+.agent-node {
+  font-size: 0.75rem;
+  color: #64748b;
+  background: rgba(100, 116, 139, 0.2);
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+.agent-panel-content {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Decision Badge */
+.agent-decision-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border-radius: 8px;
+  border: 2px solid;
+}
+
+.decision-icon {
+  font-size: 1.4rem;
+}
+
+.decision-label {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+/* Confidence Bar */
+.agent-confidence {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.confidence-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #64748b;
+  letter-spacing: 1px;
+}
+
+.confidence-value {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.confidence-bar-bg {
+  height: 6px;
+  background: #2d2d4a;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.confidence-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+/* Health Trend */
+.agent-trend {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(45, 45, 74, 0.5);
+  border-radius: 6px;
+}
+
+.trend-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  letter-spacing: 1px;
+}
+
+.trend-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.trend-icon {
+  font-size: 1.2rem;
+}
+
+.trend-velocity {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+/* Persistence */
+.agent-persistence {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(251, 191, 36, 0.1);
+  border-radius: 6px;
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.persistence-label {
+  font-size: 0.75rem;
+  color: #fbbf24;
+  letter-spacing: 1px;
+}
+
+.persistence-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fbbf24;
+}
+
+/* AI Explanation */
+.agent-explanation {
+  background: rgba(168, 85, 247, 0.1);
+  border-radius: 8px;
+  padding: 14px;
+  border: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+.explanation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.explanation-label {
+  font-size: 0.75rem;
+  color: #a855f7;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.explanation-source {
+  font-size: 0.7rem;
+  color: #64748b;
+  background: rgba(100, 116, 139, 0.2);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.explanation-text {
+  font-size: 0.9rem;
+  color: #e2e8f0;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Expand Button */
+.agent-expand-btn {
+  background: transparent;
+  border: 1px solid #2d2d4a;
+  color: #64748b;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.agent-expand-btn:hover {
+  background: rgba(45, 45, 74, 0.5);
+  color: #e2e8f0;
+}
+
+/* Agent Details (Expanded) */
+.agent-details {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #2d2d4a;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Contributing Factors */
+.agent-factors {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.factors-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  letter-spacing: 1px;
+}
+
+.factors-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.factor-chip {
+  font-size: 0.75rem;
+  background: rgba(0, 212, 255, 0.15);
+  color: #00d4ff;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+/* Reasoning Chain */
+.agent-reasoning {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reasoning-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  letter-spacing: 1px;
+}
+
+.reasoning-list {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.reasoning-step {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+/* Loading State */
+.agent-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.agent-loading span {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}

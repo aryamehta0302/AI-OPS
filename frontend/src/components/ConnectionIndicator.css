@@ -1,0 +1,171 @@
+/**
+ * Connection Indicator Styles
+ */
+
+/* Main Connection Indicator */
+.connection-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+}
+
+.connection-indicator.connected {
+  background: rgba(74, 222, 128, 0.15);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  color: #4ade80;
+}
+
+.connection-indicator.disconnected {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  animation: disconnectedPulse 2s infinite;
+}
+
+@keyframes disconnectedPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Connection Dot */
+.connection-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: dotPulse 2s infinite;
+}
+
+.connected .connection-dot {
+  background: #4ade80;
+  box-shadow: 0 0 8px #4ade80;
+}
+
+.disconnected .connection-dot {
+  background: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+}
+
+@keyframes dotPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.connection-text {
+  text-transform: uppercase;
+}
+
+/* Node Connection Status */
+.node-connection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+.node-connection.connected {
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.2);
+}
+
+.node-connection.disconnected {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.node-id {
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.node-status {
+  font-size: 0.7rem;
+  letter-spacing: 0.5px;
+  color: inherit;
+}
+
+.node-connection.connected .node-status {
+  color: #4ade80;
+}
+
+.node-connection.disconnected .node-status {
+  color: #ef4444;
+}
+
+/* Dot Only (for compact use) */
+.connection-dot-only {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  cursor: help;
+}
+
+.connection-dot-only.connected {
+  background: #4ade80;
+  box-shadow: 0 0 6px #4ade80;
+}
+
+.connection-dot-only.disconnected {
+  background: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
+  animation: blinkDot 1s infinite;
+}
+
+@keyframes blinkDot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Node Status Badge (for node selector) */
+.node-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.node-status-badge .status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.node-status-badge.connected {
+  background: rgba(74, 222, 128, 0.15);
+  color: #4ade80;
+}
+
+.node-status-badge.connected .status-dot {
+  background: #4ade80;
+}
+
+.node-status-badge.disconnected {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.node-status-badge.disconnected .status-dot {
+  background: #ef4444;
+}
+
+.node-status-badge.stale {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+}
+
+.node-status-badge.stale .status-dot {
+  background: #fbbf24;
+}

@@ -5,7 +5,9 @@ import requests
 import psutil
 import platform
 import random
+import threading
 from datetime import datetime, timezone
+from enum import Enum
 
 
 def get_disk_path():
@@ -16,38 +18,231 @@ def get_disk_path():
 
 
 # ==========================================
-# DEMO STRESS SIMULATION
-# OPTIMIZED: Guaranteed health drop every ~15 seconds for incidents
-# Cycles between NORMAL -> WARNING -> CRITICAL -> NORMAL
+# AGENT STATE ENUMS
+# ==========================================
+
+class AgentHealthState(Enum):
+    """Internal health state of the PC agent"""
+    HEALTHY = "HEALTHY"
+    DEGRADING = "DEGRADING"
+    DEGRADED = "DEGRADED"
+    RECOVERING = "RECOVERING"
+
+
+class DegradationType(Enum):
+    """Types of simulated degradation"""
+    NONE = "NONE"
+    CPU_PRESSURE = "CPU_PRESSURE"
+    MEMORY_PRESSURE = "MEMORY_PRESSURE"
+    NETWORK_SATURATION = "NETWORK_SATURATION"
+    COMBINED = "COMBINED"
+
+
+# ==========================================
+# REALISTIC PC AGENT STATE CLASS
+# ==========================================
+
+class PCAgentState:
+    """
+    Maintains realistic internal state for a PC agent.
+    This makes each agent behave like a real autonomous system node.
+    """
+    
+    def __init__(self, node_id: str):
+        self.node_id = node_id
+        
+        # Internal health tracking
+        self.health_state = AgentHealthState.HEALTHY
+        self.degradation_type = DegradationType.NONE
+        self.degradation_level = 0.0  # 0.0 to 1.0 (severity)
+        
+        # Timing and persistence
+        self.cycles_in_current_state = 0
+        self.last_state_change = time.time()
+        self.heartbeat_sequence = 0
+        
+        # Connection state
+        self.connected = False
+        self.last_successful_send = None
+        self.consecutive_failures = 0
+        self.reconnect_attempts = 0
+        
+        # Degradation simulation parameters (probabilistic)
+        self.degradation_probability = 0.05  # 5% chance per cycle to start degrading
+        self.recovery_probability = 0.15  # 15% chance per cycle to start recovering
+        self.max_degradation_cycles = 12  # Max cycles before forced recovery
+        self.min_degradation_cycles = 4   # Min cycles of degradation
+        
+        # Lock for thread safety
+        self._lock = threading.Lock()
+    
+    def update_cycle(self) -> dict:
+        """
+        Update agent state for this cycle.
+        Returns state info to be included in metrics payload.
+        
+        IMPORTANT: This is SIMULATION only - no OS-level changes.
+        """
+        with self._lock:
+            self.cycles_in_current_state += 1
+            self.heartbeat_sequence += 1
+            
+            # State machine transitions (probabilistic + time-based)
+            if self.health_state == AgentHealthState.HEALTHY:
+                # Small chance to start degrading
+                if random.random() < self.degradation_probability:
+                    self._start_degradation()
+                    
+            elif self.health_state == AgentHealthState.DEGRADING:
+                # Gradually increase degradation
+                self.degradation_level = min(1.0, self.degradation_level + random.uniform(0.1, 0.25))
+                
+                if self.degradation_level >= 0.6:
+                    self.health_state = AgentHealthState.DEGRADED
+                    self.cycles_in_current_state = 0
+                    print(f"[{self.node_id}] State: DEGRADING -> DEGRADED (level: {self.degradation_level:.2f})")
+                    
+            elif self.health_state == AgentHealthState.DEGRADED:
+                # Stay degraded for a while, then probabilistically recover
+                if self.cycles_in_current_state >= self.min_degradation_cycles:
+                    if (self.cycles_in_current_state >= self.max_degradation_cycles or 
+                        random.random() < self.recovery_probability):
+                        self._start_recovery()
+                        
+            elif self.health_state == AgentHealthState.RECOVERING:
+                # Gradually decrease degradation
+                self.degradation_level = max(0.0, self.degradation_level - random.uniform(0.15, 0.3))
+                
+                if self.degradation_level <= 0.1:
+                    self.health_state = AgentHealthState.HEALTHY
+                    self.degradation_type = DegradationType.NONE
+                    self.degradation_level = 0.0
+                    self.cycles_in_current_state = 0
+                    print(f"[{self.node_id}] State: RECOVERING -> HEALTHY")
+            
+            return self._get_state_info()
+    
+    def _start_degradation(self):
+        """Begin a degradation event"""
+        # Randomly choose degradation type with weighted probabilities
+        weights = [0.45, 0.35, 0.15, 0.05]  # CPU most common
+        degradation_types = [
+            DegradationType.CPU_PRESSURE,
+            DegradationType.MEMORY_PRESSURE,
+            DegradationType.NETWORK_SATURATION,
+            DegradationType.COMBINED
+        ]
+        self.degradation_type = random.choices(degradation_types, weights=weights)[0]
+        self.degradation_level = random.uniform(0.1, 0.3)  # Start mild
+        self.health_state = AgentHealthState.DEGRADING
+        self.cycles_in_current_state = 0
+        self.last_state_change = time.time()
+        
+        print(f"[{self.node_id}] State: HEALTHY -> DEGRADING ({self.degradation_type.value})")
+    
+    def _start_recovery(self):
+        """Begin recovery from degradation"""
+        self.health_state = AgentHealthState.RECOVERING
+        self.cycles_in_current_state = 0
+        self.last_state_change = time.time()
+        print(f"[{self.node_id}] State: DEGRADED -> RECOVERING")
+    
+    def _get_state_info(self) -> dict:
+        """Get current state information for payload"""
+        return {
+            "health_state": self.health_state.value,
+            "degradation_type": self.degradation_type.value,
+            "degradation_level": round(self.degradation_level, 3),
+            "cycles_in_state": self.cycles_in_current_state,
+            "heartbeat_seq": self.heartbeat_sequence,
+            "connected": self.connected
+        }
+    
+    def apply_degradation_to_metrics(self, metrics: dict) -> dict:
+        """
+        Apply simulated degradation to metrics.
+        This is SIMULATION ONLY - does NOT affect real system.
+        """
+        if self.degradation_level == 0 or self.degradation_type == DegradationType.NONE:
+            return metrics
+        
+        # Scale factor based on degradation level
+        scale = self.degradation_level
+        
+        if self.degradation_type == DegradationType.CPU_PRESSURE:
+            # Simulate CPU pressure (gradual increase)
+            base_cpu = metrics["cpu"]["usage_percent"]
+            added = scale * random.uniform(30, 60)
+            metrics["cpu"]["usage_percent"] = min(99, base_cpu + added)
+            
+        elif self.degradation_type == DegradationType.MEMORY_PRESSURE:
+            # Simulate memory pressure
+            base_mem = metrics["memory"]["usage_percent"]
+            added = scale * random.uniform(25, 50)
+            metrics["memory"]["usage_percent"] = min(98, base_mem + added)
+            # Memory pressure also affects CPU slightly
+            metrics["cpu"]["usage_percent"] = min(95, metrics["cpu"]["usage_percent"] + scale * 10)
+            
+        elif self.degradation_type == DegradationType.NETWORK_SATURATION:
+            # Simulate network saturation (high IO)
+            metrics["network"]["bytes_sent"] = int(metrics["network"]["bytes_sent"] * (1 + scale * 5))
+            metrics["network"]["bytes_received"] = int(metrics["network"]["bytes_received"] * (1 + scale * 5))
+            # Network saturation causes some CPU overhead
+            metrics["cpu"]["usage_percent"] = min(90, metrics["cpu"]["usage_percent"] + scale * 15)
+            
+        elif self.degradation_type == DegradationType.COMBINED:
+            # Combined pressure - most severe
+            base_cpu = metrics["cpu"]["usage_percent"]
+            base_mem = metrics["memory"]["usage_percent"]
+            metrics["cpu"]["usage_percent"] = min(99, base_cpu + scale * random.uniform(35, 55))
+            metrics["memory"]["usage_percent"] = min(98, base_mem + scale * random.uniform(20, 40))
+        
+        return metrics
+    
+    def record_send_success(self):
+        """Record successful metric send"""
+        with self._lock:
+            self.connected = True
+            self.last_successful_send = time.time()
+            self.consecutive_failures = 0
+            self.reconnect_attempts = 0
+    
+    def record_send_failure(self):
+        """Record failed metric send"""
+        with self._lock:
+            self.consecutive_failures += 1
+            if self.consecutive_failures >= 3:
+                self.connected = False
+
+
+# Global agent state (created per agent instance)
+agent_state = None
+
+
+# ==========================================
+# LEGACY STRESS SIMULATION (kept for backward compatibility)
 # ==========================================
 
 # Stress event state
 stress_event = {
     "active": False,
     "type": None,
-    "severity": "NORMAL",  # Track severity for incident transitions
+    "severity": "NORMAL",
     "remaining_cycles": 0
 }
 
-# Cycle counter for guaranteed stress every 15 seconds (3 cycles at 5s interval)
 cycle_counter = 0
-STRESS_EVERY_N_CYCLES = 3  # 3 cycles * 5 seconds = 15 seconds
-
-# Severity rotation for clear incident recording
+STRESS_EVERY_N_CYCLES = 3
 SEVERITY_ROTATION = ["WARNING", "CRITICAL", "CRITICAL", "WARNING"]
 severity_index = 0
 
 
 def maybe_trigger_stress():
-    """
-    OPTIMIZED: Trigger health drop every ~15 seconds.
-    Rotates between severities to create clear incident transitions.
-    """
+    """Legacy stress trigger - kept for --demo-stress flag compatibility"""
     global stress_event, cycle_counter, severity_index
     
     cycle_counter += 1
     
-    # If stress is already active, decrement counter
     if stress_event["active"]:
         stress_event["remaining_cycles"] -= 1
         if stress_event["remaining_cycles"] <= 0:
@@ -57,62 +252,41 @@ def maybe_trigger_stress():
             stress_event["severity"] = "NORMAL"
         return stress_event
     
-    # Trigger stress every 3 cycles (~15 seconds)
     if cycle_counter >= STRESS_EVERY_N_CYCLES:
         cycle_counter = 0
-        
-        # Rotate through severities for varied incidents
         severity_index = (severity_index + 1) % len(SEVERITY_ROTATION)
         target_severity = SEVERITY_ROTATION[severity_index]
-        
-        # FOCUSED: CPU-centric stress types (network fluctuations are normal)
-        stress_types = ["CPU_SPIKE", "CPU_SPIKE", "MEMORY_PRESSURE"]  # 66% CPU focus
+        stress_types = ["CPU_SPIKE", "CPU_SPIKE", "MEMORY_PRESSURE"]
         stress_event["active"] = True
         stress_event["type"] = random.choice(stress_types)
         stress_event["severity"] = target_severity
-        stress_event["remaining_cycles"] = 2  # 10 seconds duration
-        
+        stress_event["remaining_cycles"] = 2
         print(f"[STRESS] Triggered: {stress_event['type']} -> {target_severity} for 2 cycles")
     
     return stress_event
 
 
 def apply_stress_modifier(metrics, event):
-    """
-    Apply stress modifiers ON TOP OF real metrics.
-    FOCUSED: CPU is the primary concern - most stress affects CPU.
-    Network fluctuations are normal and ignored.
-    """
+    """Legacy stress modifier - kept for backward compatibility"""
     if not event["active"]:
         return metrics, False, "NORMAL"
     
     stress_type = event["type"]
     target_severity = event["severity"]
-    
-    # Get REAL values as base
     real_cpu = metrics["cpu"]["usage_percent"]
     real_memory = metrics["memory"]["usage_percent"]
     
-    # ADD stress on top of real metrics - CPU FOCUSED
     if target_severity == "CRITICAL":
         if stress_type == "CPU_SPIKE":
-            # Primary focus: CPU spike (simulates runaway process)
             metrics["cpu"]["usage_percent"] = min(99, real_cpu + random.uniform(50, 70))
-            print(f"[METRICS] CPU CRITICAL: {real_cpu:.1f}% -> {metrics['cpu']['usage_percent']:.1f}%")
         elif stress_type == "MEMORY_PRESSURE":
-            # Memory pressure also affects CPU slightly
             metrics["memory"]["usage_percent"] = min(98, real_memory + random.uniform(35, 50))
             metrics["cpu"]["usage_percent"] = min(90, real_cpu + random.uniform(15, 25))
-            print(f"[METRICS] Memory CRITICAL: {real_memory:.1f}% -> {metrics['memory']['usage_percent']:.1f}%")
-            
     elif target_severity == "WARNING":
         if stress_type == "CPU_SPIKE":
-            # Moderate CPU increase
             metrics["cpu"]["usage_percent"] = min(85, real_cpu + random.uniform(25, 40))
-            print(f"[METRICS] CPU WARNING: {real_cpu:.1f}% -> {metrics['cpu']['usage_percent']:.1f}%")
         elif stress_type == "MEMORY_PRESSURE":
             metrics["memory"]["usage_percent"] = min(85, real_memory + random.uniform(20, 35))
-            print(f"[METRICS] Memory WARNING: {real_memory:.1f}% -> {metrics['memory']['usage_percent']:.1f}%")
     
     return metrics, True, target_severity
 
@@ -142,50 +316,129 @@ def collect_metrics():
     }
 
 
-def run_agent(node_id, backend_url, interval, enable_stress=False):
+def run_agent(node_id, backend_url, interval, enable_stress=False, enable_realistic=True):
+    """
+    Run the PC agent with realistic behavior simulation.
+    
+    Args:
+        node_id: Unique identifier for this agent
+        backend_url: Backend server URL
+        interval: Metric collection interval in seconds
+        enable_stress: Enable legacy stress simulation (--demo-stress)
+        enable_realistic: Enable realistic probabilistic degradation (default: True)
+    """
+    global agent_state
+    
     hostname = socket.gethostname()
-    print(f"[AGENT STARTED] Node: {node_id} | Hostname: {hostname}")
+    agent_state = PCAgentState(node_id)
+    
+    print(f"=" * 60)
+    print(f"[AGENT STARTED] Node: {node_id}")
+    print(f"[AGENT] Hostname: {hostname}")
+    print(f"[AGENT] Backend: {backend_url}")
+    print(f"[AGENT] Interval: {interval}s")
+    print(f"[AGENT] Realistic Mode: {enable_realistic}")
+    print(f"[AGENT] Legacy Stress: {enable_stress}")
+    print(f"=" * 60)
+    
+    if enable_realistic:
+        print(f"[AGENT] Probabilistic degradation enabled:")
+        print(f"        - {agent_state.degradation_probability*100:.0f}% chance to degrade per cycle")
+        print(f"        - {agent_state.recovery_probability*100:.0f}% chance to recover per cycle")
+        print(f"        - Types: CPU_PRESSURE, MEMORY_PRESSURE, NETWORK_SATURATION, COMBINED")
+    
     if enable_stress:
-        print(f"[AGENT] Demo mode: Health drop every ~15 seconds (WARNING/CRITICAL rotation)")
-        print(f"[AGENT] Incidents will be recorded on each state transition")
+        print(f"[AGENT] Legacy demo mode: Health drop every ~15 seconds")
 
+    reconnect_delay = 1  # Start with 1 second reconnect delay
+    max_reconnect_delay = 30  # Max 30 seconds between reconnect attempts
+    
     while True:
         try:
             # Collect REAL metrics
             metrics = collect_metrics()
             
-            # Check for stress events (demo mode only)
+            # Update agent state (probabilistic state machine)
+            if enable_realistic:
+                state_info = agent_state.update_cycle()
+                metrics = agent_state.apply_degradation_to_metrics(metrics)
+            else:
+                state_info = {
+                    "health_state": "HEALTHY",
+                    "degradation_type": "NONE",
+                    "degradation_level": 0.0,
+                    "cycles_in_state": 0,
+                    "heartbeat_seq": 0,
+                    "connected": True
+                }
+            
+            # Legacy stress simulation (if enabled)
             simulated_event = False
             target_severity = "NORMAL"
             if enable_stress:
                 event = maybe_trigger_stress()
                 metrics, simulated_event, target_severity = apply_stress_modifier(metrics, event)
             
+            # Build comprehensive payload with heartbeat + metrics
             payload = {
                 "node_id": node_id,
                 "hostname": hostname,
                 "metrics": metrics,
-                "simulated_event": simulated_event,  # Flag for transparency
-                "target_severity": target_severity   # Hint for debugging
+                # Agent state information
+                "agent_state": state_info,
+                "heartbeat": {
+                    "sequence": state_info["heartbeat_seq"],
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "uptime_seconds": time.time() - agent_state.last_state_change if agent_state else 0
+                },
+                # Legacy fields for backward compatibility
+                "simulated_event": simulated_event or (state_info["degradation_level"] > 0),
+                "target_severity": target_severity if enable_stress else (
+                    "CRITICAL" if state_info["degradation_level"] > 0.7 else
+                    "WARNING" if state_info["degradation_level"] > 0.3 else "NORMAL"
+                )
             }
 
             response = requests.post(
                 f"{backend_url}/agent/metrics",
                 json=payload,
-                timeout=3
+                timeout=5
             )
 
-            if response.status_code != 200:
-                print(f"[WARN] Backend responded with {response.status_code}")
+            if response.status_code == 200:
+                agent_state.record_send_success()
+                reconnect_delay = 1  # Reset reconnect delay on success
+                
+                # Log state changes
+                if state_info["degradation_level"] > 0:
+                    print(f"[{node_id}] Sent metrics - State: {state_info['health_state']}, "
+                          f"Type: {state_info['degradation_type']}, "
+                          f"Level: {state_info['degradation_level']:.2f}")
+            else:
+                agent_state.record_send_failure()
+                print(f"[{node_id}] WARN: Backend responded with {response.status_code}")
 
+        except requests.exceptions.ConnectionError:
+            agent_state.record_send_failure()
+            print(f"[{node_id}] ERROR: Cannot connect to backend (attempt {agent_state.consecutive_failures})")
+            print(f"[{node_id}] Retrying in {reconnect_delay}s...")
+            time.sleep(reconnect_delay)
+            reconnect_delay = min(reconnect_delay * 2, max_reconnect_delay)  # Exponential backoff
+            continue
+            
+        except requests.exceptions.Timeout:
+            agent_state.record_send_failure()
+            print(f"[{node_id}] ERROR: Request timeout")
+            
         except Exception as e:
-            print(f"[ERROR] Failed to send metrics: {e}")
+            agent_state.record_send_failure()
+            print(f"[{node_id}] ERROR: Failed to send metrics: {e}")
 
         time.sleep(interval)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="AIOps PC Monitoring Agent")
+    parser = argparse.ArgumentParser(description="AIOps PC Monitoring Agent - Realistic Autonomous Node")
 
     parser.add_argument(
         "--node-id",
@@ -209,14 +462,38 @@ if __name__ == "__main__":
     parser.add_argument(
         "--demo-stress",
         action="store_true",
-        help="Enable occasional stress simulation for demo (2%% chance per cycle)"
+        help="Enable legacy periodic stress simulation (every ~15 seconds)"
+    )
+    
+    parser.add_argument(
+        "--no-realistic",
+        action="store_true",
+        help="Disable realistic probabilistic degradation (use only for testing)"
+    )
+    
+    parser.add_argument(
+        "--degradation-chance",
+        type=float,
+        default=0.05,
+        help="Probability of degradation per cycle (0.0-1.0, default: 0.05)"
+    )
+    
+    parser.add_argument(
+        "--recovery-chance",
+        type=float,
+        default=0.15,
+        help="Probability of recovery per cycle (0.0-1.0, default: 0.15)"
     )
 
     args = parser.parse_args()
-
+    
+    # Configure degradation probabilities if custom values provided
+    enable_realistic = not args.no_realistic
+    
     run_agent(
         node_id=args.node_id,
         backend_url=args.backend_url,
         interval=args.interval,
-        enable_stress=args.demo_stress
+        enable_stress=args.demo_stress,
+        enable_realistic=enable_realistic
     )

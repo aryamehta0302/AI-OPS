@@ -6,7 +6,7 @@ const { Server } = require("socket.io");
 
 const setupSocket = require("./socket");
 const { getTimeline } = require("./services/incidentManager");
-const { processAgentMetrics, initConnectionChecker } = require("./services/nodeManager");
+const { processAgentMetrics, initConnectionChecker, getActiveNodes, getConnectionStats } = require("./services/nodeManager");
 
 const app = express();
 app.use(cors());
@@ -51,30 +51,69 @@ app.get("/incidents", (req, res) => {
 // =======================
 
 // POST /agent/metrics - Receives metrics from distributed agents
+// HARDENED: Strict validation, heartbeat tracking, connection state management
 app.post("/agent/metrics", async (req, res) => {
-  const { node_id, hostname, metrics } = req.body;
+  const { node_id, hostname, metrics, agent_state, heartbeat } = req.body;
 
-  // Validate required fields
+  // Basic validation (detailed validation in nodeManager)
   if (!node_id || !metrics) {
     return res.status(400).json({ 
-      error: "Missing required fields: node_id and metrics" 
+      error: "Missing required fields: node_id and metrics",
+      received: { node_id: !!node_id, metrics: !!metrics }
     });
   }
 
   try {
     // Process metrics through AI Engine and emit to frontend
-    const result = await processAgentMetrics(io, { node_id, hostname, metrics });
-    res.json({ status: "ok", node_id, processed: true });
+    const result = await processAgentMetrics(io, { 
+      node_id, 
+      hostname, 
+      metrics,
+      agent_state,
+      heartbeat
+    });
+    
+    res.json({ 
+      status: "ok", 
+      node_id, 
+      processed: true,
+      connection_state: "CONNECTED",
+      agent_status: result.agent_status || "ACTIVE"
+    });
   } catch (err) {
     console.error(`[AGENT] Error processing metrics for ${node_id}:`, err.message);
-    res.status(500).json({ error: "Failed to process metrics" });
+    res.status(err.message.includes("rejected") ? 400 : 500).json({ 
+      error: err.message || "Failed to process metrics",
+      node_id
+    });
   }
 });
 
-// GET /nodes - Returns list of active nodes
+// GET /nodes - Returns list of all nodes with connection state
 app.get("/nodes", (req, res) => {
-  const { getActiveNodes } = require("./services/nodeManager");
-  res.json({ nodes: getActiveNodes() });
+  const nodes = getActiveNodes();
+  const stats = getConnectionStats();
+  
+  res.json({ 
+    nodes,
+    stats,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// GET /nodes/:nodeId - Returns detailed info for a specific node
+app.get("/nodes/:nodeId", (req, res) => {
+  const { getNodeData } = require("./services/nodeManager");
+  const nodeData = getNodeData(req.params.nodeId);
+  
+  if (!nodeData) {
+    return res.status(404).json({ 
+      error: "Node not found",
+      node_id: req.params.nodeId
+    });
+  }
+  
+  res.json(nodeData);
 });
 
 // =======================

@@ -1,6 +1,6 @@
 const PredictionCard = ({ prediction }) => {
-  // FIXED: Check explicit status field to prevent infinite loading
-  // If prediction exists with any status, stop showing spinner
+  // FIXED: Explicit status handling to prevent infinite loading
+  // Status can be: STABLE, FAILURE_LIKELY, INSUFFICIENT_DATA
   
   if (!prediction) {
     // Only show loading when prediction object is completely missing
@@ -9,30 +9,54 @@ const PredictionCard = ({ prediction }) => {
         <h3>PREDICTIVE ANALYSIS</h3>
         <div className="loading">
           <div className="loading-spinner"></div>
-          Waiting for data...
+          Awaiting agent analysis...
         </div>
       </div>
     );
   }
 
-  // Handle INSUFFICIENT_DATA status explicitly - show collecting message, not spinner
+  // Handle INSUFFICIENT_DATA status - show collecting message, not spinner
   if (prediction.status === "INSUFFICIENT_DATA" || prediction.trend === "ANALYZING") {
     return (
       <div className="card">
         <h3>PREDICTIVE ANALYSIS</h3>
-        <div className="empty-state">
-          <div className="empty-state-icon scan-icon"></div>
-          <p>Collecting data... ({prediction.message || "Building baseline"})</p>
+        <div className="prediction-collecting">
+          <div className="collecting-icon">📊</div>
+          <div className="collecting-text">
+            <span className="collecting-status">COLLECTING DATA</span>
+            <span className="collecting-message">{prediction.message || "Building baseline..."}</span>
+          </div>
         </div>
       </div>
     );
   }
 
+  // Handle STABLE status
+  if (prediction.status === "STABLE") {
+    return (
+      <div className="card">
+        <h3>PREDICTIVE ANALYSIS</h3>
+        <div className="prediction-stable">
+          <div className="stable-icon">✓</div>
+          <div className="stable-content">
+            <span className="stable-status">SYSTEM STABLE</span>
+            <span className="stable-message">{prediction.message}</span>
+            <div className="stable-confidence">
+              <span>Confidence: {Math.round(prediction.confidence * 100)}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle FAILURE_LIKELY status
   const getTrendClass = (trend) => {
     switch (trend) {
       case "DEGRADING": return "critical";
       case "IMPROVING": return "normal";
       case "STABLE": return "warning";
+      case "CRITICAL_DECLINE": return "critical";
       default: return "";
     }
   };
@@ -56,7 +80,7 @@ const PredictionCard = ({ prediction }) => {
         <div className="prediction-trend">
           <span className="trend-label">TREND</span>
           <span className={`trend-value ${getTrendClass(prediction.trend)}`}>
-            {prediction.trend}
+            {prediction.trend?.replace("_", " ")}
           </span>
         </div>
 
@@ -79,13 +103,17 @@ const PredictionCard = ({ prediction }) => {
 
         <div className="prediction-message">
           {prediction.message}
-          {/* Show ETA when failure is likely */}
-          {prediction.status === "FAILURE_LIKELY" && prediction.eta_minutes && (
-            <div className="prediction-eta">
-              ⚠️ Estimated time to issue: ~{prediction.eta_minutes} min
-            </div>
-          )}
         </div>
+
+        {/* Show ETA when failure is likely */}
+        {prediction.status === "FAILURE_LIKELY" && prediction.eta_minutes && (
+          <div className="prediction-eta">
+            <span className="eta-icon">⏱️</span>
+            <span className="eta-text">
+              Estimated time to issue: <strong>~{prediction.eta_minutes} min</strong>
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

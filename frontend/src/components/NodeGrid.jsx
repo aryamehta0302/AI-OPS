@@ -19,9 +19,43 @@ const NodeGrid = ({ nodes, onSelectNode }) => {
     }
   };
 
-  // FIXED: Check if node is disconnected
+  // Check if node is disconnected
   const isDisconnected = (node) => {
     return node.connectionStatus === "DISCONNECTED";
+  };
+
+  // Get agent status (ACTIVE, DEGRADED, RECOVERING, HEALING)
+  const getAgentStatus = (node) => {
+    if (isDisconnected(node)) return "OFFLINE";
+    
+    // Check healing status
+    if (node.healingStatus?.active_healing) return "HEALING";
+    
+    // Check agent decision
+    const decision = node.agentDecision?.decision;
+    if (decision === "AUTO_HEAL") return "HEALING";
+    if (decision === "ESCALATE" || decision === "PREDICT_FAILURE") return "DEGRADED";
+    if (decision === "DE_ESCALATE") return "RECOVERING";
+    
+    // Check agent state from PC agent
+    const agentState = node.metrics?.agent_state || node.agentState;
+    if (agentState) {
+      if (agentState.health_state === "DEGRADED" || agentState.health_state === "DEGRADING") return "DEGRADED";
+      if (agentState.health_state === "RECOVERING") return "RECOVERING";
+    }
+    
+    return "ACTIVE";
+  };
+
+  // Get agent status color class
+  const getAgentStatusClass = (status) => {
+    switch (status) {
+      case "OFFLINE": return "status-offline";
+      case "DEGRADED": return "status-degraded";
+      case "HEALING": return "status-healing";
+      case "RECOVERING": return "status-recovering";
+      default: return "status-active";
+    }
   };
 
   return (
@@ -31,6 +65,7 @@ const NodeGrid = ({ nodes, onSelectNode }) => {
         const prediction = node.prediction || {};
         const metrics = node.metrics || {};
         const disconnected = isDisconnected(node);
+        const agentStatus = getAgentStatus(node);
         
         return (
           <div 
@@ -48,6 +83,17 @@ const NodeGrid = ({ nodes, onSelectNode }) => {
               <div className={`node-status-badge ${disconnected ? 'disconnected' : getStatusClass(health.risk_level)}`}>
                 {disconnected ? "OFFLINE" : (health.risk_level || "UNKNOWN")}
               </div>
+            </div>
+
+            {/* Agent Status Badge - NEW */}
+            <div className={`node-agent-status ${getAgentStatusClass(agentStatus)}`}>
+              <span className="agent-status-icon">
+                {agentStatus === "HEALING" ? "🔧" : 
+                 agentStatus === "DEGRADED" ? "⚠️" :
+                 agentStatus === "RECOVERING" ? "↑" :
+                 agentStatus === "OFFLINE" ? "⊘" : "✓"}
+              </span>
+              <span className="agent-status-label">{agentStatus}</span>
             </div>
 
             {/* Health Score */}

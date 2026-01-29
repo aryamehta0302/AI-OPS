@@ -1,16 +1,67 @@
-# React + Vite
+# Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React dashboard for real-time AIOps monitoring and agent decision visualization.
 
-Currently, two official plugins are available:
+## What's in This Folder
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+| File/Folder | Purpose |
+|-------------|---------|
+| `src/App.jsx` | Main application component |
+| `src/components/` | UI components |
+| `src/services/socket.js` | Socket.IO client for real-time updates |
+| `vite.config.js` | Vite build configuration |
+| `index.html` | Entry HTML file |
 
-## React Compiler
+## Key Components
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Component | Purpose |
+|-----------|---------|
+| `AgentDecisionPanel.jsx` | Displays autonomous agent decisions and reasoning |
+| `MetricsChart.jsx` | Real-time CPU, Memory, Disk, Network charts |
+| `HealthCard.jsx` | System health score and risk level |
+| `RootCauseCard.jsx` | AI-identified root cause of issues |
+| `HealingStatus.jsx` | Auto-healing action status |
+| `NodeGrid.jsx` | Multi-node overview grid |
+| `NodeSelector.jsx` | Switch between monitored nodes |
+| `IncidentTimeline.jsx` | System state change history |
+| `AlertBanner.jsx` | Critical alert notifications |
+| `ConnectionIndicator.jsx` | Backend connection status |
+| `PredictionCard.jsx` | Future risk predictions |
 
-## Expanding the ESLint configuration
+## Quick Start
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+## Environment Variables
+
+Create a `.env` file:
+
+```env
+VITE_BACKEND_URL=http://localhost:5000
+```
+
+## Tech Stack
+
+- **React 19** - UI framework
+- **Vite** - Build tool with HMR
+- **Recharts** - Charting library
+- **Socket.IO Client** - Real-time WebSocket communication
+- **CSS** - Custom dark theme styling
+
+## Dashboard Features
+
+- **Real-time Metrics** - Live CPU, Memory, Disk, Network visualization
+- **Agent Decisions** - See autonomous AI decisions with full reasoning chains
+- **Multi-Node Support** - Monitor multiple PCs from one dashboard
+- **Health Scoring** - Visual health indicators (NORMAL, WARNING, CRITICAL)
+- **Root Cause Analysis** - AI-identified sources of issues
+- **Auto-Healing Status** - Track automated remediation actions

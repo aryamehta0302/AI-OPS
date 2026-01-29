@@ -11,9 +11,12 @@ import IncidentTimeline from "./components/IncidentTimeline";
 import MetricsChart from "./components/MetricsChart";
 import ContributorsBar from "./components/ContributorsBar";
 import AlertBanner from "./components/AlertBanner";
+import AgentDecisionPanel from "./components/AgentDecisionPanel";
+import HealingStatus from "./components/HealingStatus";
+import ConnectionIndicator, { ConnectionDot } from "./components/ConnectionIndicator";
 
 function App() {
-  // Multi-node state: { node_id: { metrics, health, rootCause, prediction, history } }
+  // Multi-node state: { node_id: { metrics, health, rootCause, prediction, agentDecision, healingStatus, history } }
   const [nodes, setNodes] = useState({});
   const [selectedNode, setSelectedNode] = useState("all");
   const [incidents, setIncidents] = useState([]);
@@ -61,17 +64,24 @@ function App() {
             health: data.system_health,
             rootCause: data.root_cause,
             prediction: data.prediction,
+            agentDecision: data.agent_decision,
+            healingStatus: data.healing_status,
+            healingActions: data.healing_actions,
+            // NEW: Include agent state and status for multi-agent visibility
+            agentState: data.agent_state,
+            agentStatus: data.agent_status || "ACTIVE",
+            connectionState: data.connection_state || "CONNECTED",
             history: newHistory,
             lastSeen: Date.now(),
-            connectionStatus: "CONNECTED"  // Mark as connected when receiving metrics
+            connectionStatus: "CONNECTED"
           }
         };
       });
     });
 
-    // FIXED: Handle per-node connection status updates from backend
+    // Handle per-node connection status updates from backend
     socket.on("node_status_update", (data) => {
-      const { node_id, status } = data;
+      const { node_id, status, agent_status, connection_state } = data;
       
       setNodes((prev) => {
         if (!prev[node_id]) return prev;
@@ -81,6 +91,8 @@ function App() {
           [node_id]: {
             ...prev[node_id],
             connectionStatus: status,
+            connectionState: connection_state || status,
+            agentStatus: agent_status || (status === "DISCONNECTED" ? "OFFLINE" : "ACTIVE"),
             lastSeen: data.lastSeen || prev[node_id].lastSeen
           }
         };
@@ -136,11 +148,10 @@ function App() {
           AIOPS SYSTEM HEALTH PLATFORM
         </div>
         <div className="header-status">
-          <span className="status-label">ENGINE STATUS</span>
-          <div className={`status-indicator ${connected ? "online" : "offline"}`}>
-            <span className="status-dot"></span>
-            {connected ? "ONLINE" : "OFFLINE"}
-          </div>
+          <ConnectionIndicator 
+            isConnected={connected} 
+            label="ENGINE STATUS"
+          />
         </div>
       </div>
 
@@ -188,6 +199,22 @@ function App() {
               dataKey="memory"
               color="#a855f7"
             />
+          </div>
+
+          {/* Agentic AI Section */}
+          <div className="agentic-section">
+            <h3 className="section-title">🤖 AGENTIC AI INTELLIGENCE</h3>
+            <div className="agentic-row">
+              <AgentDecisionPanel 
+                agentDecision={selectedData.agentDecision}
+                nodeId={selectedNode}
+              />
+              <HealingStatus 
+                healingStatus={selectedData.healingStatus}
+                healingActions={selectedData.healingActions}
+                nodeId={selectedNode}
+              />
+            </div>
           </div>
         </>
       )}
