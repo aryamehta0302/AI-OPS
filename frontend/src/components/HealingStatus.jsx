@@ -8,23 +8,38 @@
  * - Adaptive monitoring interval
  */
 
+import { 
+  Wrench, 
+  CheckCircle2, 
+  Loader2, 
+  Search, 
+  AlertTriangle,
+  Shield,
+  Activity
+} from "lucide-react";
+import { motion } from "framer-motion";
 import "./HealingStatus.css";
 
 function HealingStatus({ healingStatus, healingActions, nodeId }) {
   if (!healingStatus) {
     return (
-      <div className="healing-panel">
+      <motion.div 
+        className="healing-panel"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
         <div className="healing-panel-header">
-          <span className="healing-icon">🔧</span>
-          <span className="healing-title">AUTO-HEALING</span>
+          <Wrench size={18} className="healing-header-icon" />
+          <span className="healing-title">AUTO-REMEDIATION</span>
         </div>
         <div className="healing-panel-content">
           <div className="healing-idle">
-            <span className="idle-icon">✓</span>
-            <span>System healthy - No healing needed</span>
+            <CheckCircle2 size={20} color="#4ade80" />
+            <span>System healthy - No action needed</span>
           </div>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
@@ -37,23 +52,23 @@ function HealingStatus({ healingStatus, healingActions, nodeId }) {
     anomaly_modifier
   } = healingStatus;
 
-  // Determine overall status
+  // Determine overall status with icons
   let statusType = "idle";
   let statusLabel = "IDLE";
-  let statusIcon = "✓";
+  let StatusIcon = CheckCircle2;
   
   if (active_healing && verification_pending) {
     statusType = "healing";
-    statusLabel = "HEALING IN PROGRESS";
-    statusIcon = "⟳";
+    statusLabel = "REMEDIATION IN PROGRESS";
+    StatusIcon = Loader2;
   } else if (verification_pending) {
     statusType = "verifying";
     statusLabel = "VERIFYING RECOVERY";
-    statusIcon = "🔍";
+    StatusIcon = Search;
   } else if (consecutive_failures > 0) {
     statusType = "failed";
-    statusLabel = `HEALING FAILED (${consecutive_failures}x)`;
-    statusIcon = "⚠";
+    statusLabel = `REMEDIATION FAILED (${consecutive_failures}x)`;
+    StatusIcon = AlertTriangle;
   }
 
   // Format monitoring interval
@@ -64,21 +79,32 @@ function HealingStatus({ healingStatus, healingActions, nodeId }) {
       : "NORMAL";
 
   return (
-    <div className="healing-panel">
+    <motion.div 
+      className="healing-panel"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       {/* Header */}
       <div className="healing-panel-header">
-        <span className="healing-icon">🔧</span>
-        <span className="healing-title">AUTO-HEALING</span>
+        <Wrench size={18} className="healing-header-icon" />
+        <span className="healing-title">AUTO-REMEDIATION</span>
         <span className="healing-node">{nodeId}</span>
       </div>
 
       {/* Main Status */}
       <div className="healing-panel-content">
         {/* Status Badge */}
-        <div className={`healing-status-badge ${statusType}`}>
-          <span className="status-icon">{statusIcon}</span>
+        <motion.div 
+          className={`healing-status-badge ${statusType}`}
+          key={statusType}
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
+          <StatusIcon size={20} className={statusType === "healing" ? "spin" : ""} />
           <span className="status-label">{statusLabel}</span>
-        </div>
+        </motion.div>
 
         {/* Monitoring Interval */}
         <div className="healing-monitoring">
@@ -107,7 +133,7 @@ function HealingStatus({ healingStatus, healingActions, nodeId }) {
                 </span>
               )}
             </div>
-            <span className="simulated-note">⚠️ SIMULATED - Actual system unchanged</span>
+            <span className="simulated-note">[SIM] Simulation mode - Actual system unchanged</span>
           </div>
         )}
 
@@ -142,12 +168,12 @@ function HealingStatus({ healingStatus, healingActions, nodeId }) {
         {/* Idle State */}
         {!active_healing && !verification_pending && consecutive_failures === 0 && (
           <div className="healing-idle">
-            <span className="idle-icon">✓</span>
-            <span>No active healing - System operating normally</span>
+            <CheckCircle2 size={20} color="#4ade80" />
+            <span>No active remediation - System operating normally</span>
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
 

@@ -153,15 +153,15 @@ Response:"""
         templates = {
             "NO_ACTION": f"System operating normally. Health trend: {trend.lower()}. Confidence: {confidence:.0%}. Monitoring continues.",
             
-            "ESCALATE": f"⚠️ Alert escalated. {trend.replace('_', ' ').title()} trend detected for {persistence} cycles. Root cause: {root_cause}. Contributing factors: {factor_str}. Confidence: {confidence:.0%}.",
+            "ESCALATE": f"[ALERT] Escalated. {trend.replace('_', ' ').title()} trend detected for {persistence} cycles. Root cause: {root_cause}. Contributing factors: {factor_str}. Confidence: {confidence:.0%}.",
             
-            "DE_ESCALATE": f"✅ Recovery confirmed. Health improving after {persistence} cycles. Trend: {trend.lower()}. Alert level reduced.",
+            "DE_ESCALATE": f"[RESOLVED] Recovery confirmed. Health improving after {persistence} cycles. Trend: {trend.lower()}. Alert level reduced.",
             
-            "PREDICT_FAILURE": f"🔴 CRITICAL: Failure predicted! {trend.replace('_', ' ').title()} for {persistence} cycles. Root cause: {root_cause}. Immediate attention required. Confidence: {confidence:.0%}.",
+            "PREDICT_FAILURE": f"[CRITICAL] Failure predicted. {trend.replace('_', ' ').title()} for {persistence} cycles. Root cause: {root_cause}. Immediate attention required. Confidence: {confidence:.0%}.",
             
-            "AUTO_HEAL": f"🔧 Auto-healing initiated. Degradation detected: {root_cause}. Trend: {trend.lower()} for {persistence} cycles. Applying corrective actions. Confidence: {confidence:.0%}.",
+            "AUTO_HEAL": f"[REMEDIATION] Auto-healing initiated. Degradation detected: {root_cause}. Trend: {trend.lower()} for {persistence} cycles. Applying corrective actions. Confidence: {confidence:.0%}.",
             
-            "INVESTIGATE": f"🔍 Investigation recommended. Anomaly detected in {root_cause}. Trend: {trend.lower()}. Factors: {factor_str}. Confidence: {confidence:.0%}."
+            "INVESTIGATE": f"[REVIEW] Investigation recommended. Anomaly detected in {root_cause}. Trend: {trend.lower()}. Factors: {factor_str}. Confidence: {confidence:.0%}."
         }
         
         return templates.get(

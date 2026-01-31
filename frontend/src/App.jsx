@@ -203,7 +203,7 @@ function App() {
 
           {/* Agentic AI Section */}
           <div className="agentic-section">
-            <h3 className="section-title">🤖 AGENTIC AI INTELLIGENCE</h3>
+            <h3 className="section-title">AUTONOMOUS INTELLIGENCE</h3>
             <div className="agentic-row">
               <AgentDecisionPanel 
                 agentDecision={selectedData.agentDecision}

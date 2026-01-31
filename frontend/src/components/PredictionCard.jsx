@@ -1,3 +1,13 @@
+import { 
+  BarChart3, 
+  CheckCircle2, 
+  Loader2,
+  Clock,
+  TrendingDown,
+  TrendingUp,
+  Minus
+} from "lucide-react";
+
 const PredictionCard = ({ prediction }) => {
   // FIXED: Explicit status handling to prevent infinite loading
   // Status can be: STABLE, FAILURE_LIKELY, INSUFFICIENT_DATA
@@ -8,7 +18,7 @@ const PredictionCard = ({ prediction }) => {
       <div className="card">
         <h3>PREDICTIVE ANALYSIS</h3>
         <div className="loading">
-          <div className="loading-spinner"></div>
+          <Loader2 size={20} className="loading-spinner spin" />
           Awaiting agent analysis...
         </div>
       </div>
@@ -21,7 +31,7 @@ const PredictionCard = ({ prediction }) => {
       <div className="card">
         <h3>PREDICTIVE ANALYSIS</h3>
         <div className="prediction-collecting">
-          <div className="collecting-icon">📊</div>
+          <BarChart3 size={24} className="collecting-icon" />
           <div className="collecting-text">
             <span className="collecting-status">COLLECTING DATA</span>
             <span className="collecting-message">{prediction.message || "Building baseline..."}</span>
@@ -37,7 +47,7 @@ const PredictionCard = ({ prediction }) => {
       <div className="card">
         <h3>PREDICTIVE ANALYSIS</h3>
         <div className="prediction-stable">
-          <div className="stable-icon">✓</div>
+          <CheckCircle2 size={24} className="stable-icon" color="#4ade80" />
           <div className="stable-content">
             <span className="stable-status">SYSTEM STABLE</span>
             <span className="stable-message">{prediction.message}</span>
@@ -108,7 +118,7 @@ const PredictionCard = ({ prediction }) => {
         {/* Show ETA when failure is likely */}
         {prediction.status === "FAILURE_LIKELY" && prediction.eta_minutes && (
           <div className="prediction-eta">
-            <span className="eta-icon">⏱️</span>
+            <Clock size={16} className="eta-icon" />
             <span className="eta-text">
               Estimated time to issue: <strong>~{prediction.eta_minutes} min</strong>
             </span>

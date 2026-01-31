@@ -20,8 +20,8 @@
   border-bottom: 1px solid #2d2d4a;
 }
 
-.agent-icon {
-  font-size: 1.3rem;
+.agent-header-icon {
+  color: #00d4ff;
 }
 
 .agent-title {
@@ -59,7 +59,11 @@
 }
 
 .decision-icon {
-  font-size: 1.4rem;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  min-width: 24px;
+  text-align: center;
 }
 
 .decision-label {
@@ -126,7 +130,10 @@
 }
 
 .trend-icon {
-  font-size: 1.2rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  min-width: 18px;
+  text-align: center;
 }
 
 .trend-velocity {
@@ -292,16 +299,51 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 10px;
   padding: 40px;
   color: #64748b;
   font-size: 0.9rem;
 }
 
-.agent-loading span {
-  animation: pulse 1.5s infinite;
+.loading-spinner {
+  animation: spin 1s linear infinite;
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Expand Button */
+.agent-expand-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  background: transparent;
+  border: 1px solid #2d2d4a;
+  color: #64748b;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.agent-expand-btn:hover {
+  background: rgba(45, 45, 74, 0.5);
+  color: #e2e8f0;
+}
+
+/* Explanation Source */
+.explanation-source {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  color: #64748b;
+  background: rgba(100, 116, 139, 0.2);
+  padding: 3px 8px;
+  border-radius: 4px;
 }

@@ -11,6 +11,24 @@
  */
 
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  CheckCircle2, 
+  AlertTriangle, 
+  ArrowDownCircle, 
+  XOctagon, 
+  Wrench,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  ChevronsDown,
+  Brain,
+  BookOpen,
+  ChevronDown,
+  ChevronUp,
+  Bot,
+  Activity
+} from "lucide-react";
 import "./AgentDecisionPanel.css";
 
 function AgentDecisionPanel({ agentDecision, nodeId }) {
@@ -18,17 +36,23 @@ function AgentDecisionPanel({ agentDecision, nodeId }) {
 
   if (!agentDecision) {
     return (
-      <div className="agent-panel">
+      <motion.div 
+        className="agent-panel"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
         <div className="agent-panel-header">
-          <span className="agent-icon">🤖</span>
-          <span className="agent-title">AGENT DECISION</span>
+          <Bot size={18} className="agent-header-icon" />
+          <span className="agent-title">AUTONOMOUS AGENT</span>
         </div>
         <div className="agent-panel-content">
           <div className="agent-loading">
+            <Activity size={20} className="loading-spinner" />
             <span>Awaiting agent analysis...</span>
           </div>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
@@ -46,22 +70,24 @@ function AgentDecisionPanel({ agentDecision, nodeId }) {
 
   // Decision styling based on type
   const decisionStyles = {
-    NO_ACTION: { color: "#4ade80", icon: "✓", label: "NO ACTION NEEDED" },
-    ESCALATE: { color: "#fbbf24", icon: "⚠", label: "ESCALATED" },
-    DE_ESCALATE: { color: "#60a5fa", icon: "↓", label: "DE-ESCALATED" },
-    PREDICT_FAILURE: { color: "#ef4444", icon: "🚨", label: "FAILURE PREDICTED" },
-    AUTO_HEAL: { color: "#a855f7", icon: "🔧", label: "AUTO-HEALING" }
+    NO_ACTION: { color: "#4ade80", Icon: CheckCircle2, label: "NO ACTION NEEDED" },
+    ESCALATE: { color: "#fbbf24", Icon: AlertTriangle, label: "ESCALATED" },
+    DE_ESCALATE: { color: "#60a5fa", Icon: ArrowDownCircle, label: "DE-ESCALATED" },
+    PREDICT_FAILURE: { color: "#ef4444", Icon: XOctagon, label: "FAILURE PREDICTED" },
+    AUTO_HEAL: { color: "#a855f7", Icon: Wrench, label: "AUTO-HEALING" }
   };
 
   const style = decisionStyles[decision] || decisionStyles.NO_ACTION;
+  const DecisionIcon = style.Icon;
 
-  // Trend arrow
-  const trendIcon = {
-    IMPROVING: "↑",
-    STABLE: "→",
-    DEGRADING: "↓",
-    CRITICAL_DECLINE: "⬇"
-  }[health_trend] || "→";
+  // Trend icons
+  const trendIcons = {
+    IMPROVING: TrendingUp,
+    STABLE: Minus,
+    DEGRADING: TrendingDown,
+    CRITICAL_DECLINE: ChevronsDown
+  };
+  const TrendIcon = trendIcons[health_trend] || Minus;
 
   const trendColor = {
     IMPROVING: "#4ade80",
@@ -71,23 +97,35 @@ function AgentDecisionPanel({ agentDecision, nodeId }) {
   }[health_trend] || "#64748b";
 
   return (
-    <div className="agent-panel">
+    <motion.div 
+      className="agent-panel"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       {/* Header */}
       <div className="agent-panel-header">
-        <span className="agent-icon">🤖</span>
-        <span className="agent-title">AGENT DECISION</span>
+        <Bot size={18} className="agent-header-icon" />
+        <span className="agent-title">AUTONOMOUS AGENT</span>
         <span className="agent-node">{nodeId}</span>
       </div>
 
       {/* Main Decision Display */}
       <div className="agent-panel-content">
         {/* Decision Badge */}
-        <div className="agent-decision-badge" style={{ backgroundColor: style.color + "20", borderColor: style.color }}>
-          <span className="decision-icon">{style.icon}</span>
+        <motion.div 
+          className="agent-decision-badge" 
+          style={{ backgroundColor: style.color + "20", borderColor: style.color }}
+          key={decision}
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
+          <DecisionIcon size={22} color={style.color} />
           <span className="decision-label" style={{ color: style.color }}>
             {style.label}
           </span>
-        </div>
+        </motion.div>
 
         {/* Confidence Bar */}
         <div className="agent-confidence">
@@ -96,10 +134,12 @@ function AgentDecisionPanel({ agentDecision, nodeId }) {
             <span className="confidence-value">{(confidence * 100).toFixed(0)}%</span>
           </div>
           <div className="confidence-bar-bg">
-            <div 
+            <motion.div 
               className="confidence-bar-fill" 
+              initial={{ width: 0 }}
+              animate={{ width: `${confidence * 100}%` }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
               style={{ 
-                width: `${confidence * 100}%`,
                 backgroundColor: confidence >= 0.8 ? "#4ade80" : confidence >= 0.6 ? "#fbbf24" : "#ef4444"
               }}
             />
@@ -110,7 +150,7 @@ function AgentDecisionPanel({ agentDecision, nodeId }) {
         <div className="agent-trend">
           <span className="trend-label">HEALTH TREND</span>
           <div className="trend-value">
-            <span className="trend-icon" style={{ color: trendColor }}>{trendIcon}</span>
+            <TrendIcon size={18} color={trendColor} />
             <span style={{ color: trendColor }}>{health_trend?.replace("_", " ")}</span>
             {trend_velocity && (
               <span className="trend-velocity">({trend_velocity > 0 ? "+" : ""}{trend_velocity.toFixed(2)}/cycle)</span>
@@ -129,9 +169,13 @@ function AgentDecisionPanel({ agentDecision, nodeId }) {
         {/* AI Explanation */}
         <div className="agent-explanation">
           <div className="explanation-header">
-            <span className="explanation-label">AI EXPLANATION</span>
+            <span className="explanation-label">AI ANALYSIS</span>
             <span className="explanation-source">
-              {explanation_source === "ollama" ? "🧠 Ollama" : "📋 Fallback"}
+              {explanation_source === "ollama" ? (
+                <><Brain size={12} /> LLM</>
+              ) : (
+                <><BookOpen size={12} /> RULES</>
+              )}
             </span>
           </div>
           <p className="explanation-text">{explanation}</p>
@@ -142,38 +186,66 @@ function AgentDecisionPanel({ agentDecision, nodeId }) {
           className="agent-expand-btn"
           onClick={() => setExpanded(!expanded)}
         >
-          {expanded ? "Hide Details ▲" : "Show Details ▼"}
+          {expanded ? (
+            <><ChevronUp size={16} /> HIDE DETAILS</>
+          ) : (
+            <><ChevronDown size={16} /> SHOW DETAILS</>
+          )}
         </button>
 
-        {expanded && (
-          <div className="agent-details">
-            {/* Contributing Factors */}
-            {contributing_factors && contributing_factors.length > 0 && (
-              <div className="agent-factors">
-                <span className="factors-label">CONTRIBUTING FACTORS</span>
-                <div className="factors-list">
-                  {contributing_factors.map((factor, idx) => (
-                    <span key={idx} className="factor-chip">{factor}</span>
-                  ))}
+        <AnimatePresence>
+          {expanded && (
+            <motion.div 
+              className="agent-details"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {/* Contributing Factors */}
+              {contributing_factors && contributing_factors.length > 0 && (
+                <div className="agent-factors">
+                  <span className="factors-label">CONTRIBUTING FACTORS</span>
+                  <div className="factors-list">
+                    {contributing_factors.map((factor, idx) => (
+                      <motion.span 
+                        key={idx} 
+                        className="factor-chip"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: idx * 0.05 }}
+                      >
+                        {factor}
+                      </motion.span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Reasoning Chain */}
-            {reasoning_chain && reasoning_chain.length > 0 && (
-              <div className="agent-reasoning">
-                <span className="reasoning-label">REASONING CHAIN</span>
-                <ol className="reasoning-list">
-                  {reasoning_chain.map((step, idx) => (
-                    <li key={idx} className="reasoning-step">{step}</li>
-                  ))}
-                </ol>
-              </div>
-            )}
-          </div>
-        )}
+              {/* Reasoning Chain */}
+              {reasoning_chain && reasoning_chain.length > 0 && (
+                <div className="agent-reasoning">
+                  <span className="reasoning-label">REASONING CHAIN</span>
+                  <ol className="reasoning-list">
+                    {reasoning_chain.map((step, idx) => (
+                      <motion.li 
+                        key={idx} 
+                        className="reasoning-step"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.1 }}
+                      >
+                        {step}
+                      </motion.li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   );
 }
 

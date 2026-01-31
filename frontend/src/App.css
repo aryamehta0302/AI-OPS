@@ -10,9 +10,19 @@
 body {
   margin: 0;
   background: #0a0e17;
-  font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
   color: #e4e6eb;
   min-height: 100vh;
+}
+
+/* Global Utility Classes */
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* Background Grid Pattern */
@@ -478,7 +488,10 @@ body::before {
 }
 
 .agent-status-icon {
-  font-size: 12px;
+  font-size: 10px;
+  font-weight: 800;
+  min-width: 18px;
+  text-align: center;
 }
 
 .agent-status-label {

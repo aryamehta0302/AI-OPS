@@ -7,6 +7,7 @@ import {
   Area,
   AreaChart
 } from "recharts";
+import { motion } from "framer-motion";
 
 const MetricsChart = ({ title, data, dataKey, color }) => {
   // Custom tooltip - tech style
@@ -44,7 +45,12 @@ const MetricsChart = ({ title, data, dataKey, color }) => {
   };
 
   return (
-    <div className="card">
+    <motion.div 
+      className="card"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
       <h3>{title}</h3>
       {data.length === 0 ? (
         <div className="loading">
@@ -87,11 +93,14 @@ const MetricsChart = ({ title, data, dataKey, color }) => {
               fill={`url(#gradient-${dataKey})`}
               dot={false}
               activeDot={{ r: 4, fill: color, stroke: "#0a0e17", strokeWidth: 2 }}
+              isAnimationActive={true}
+              animationDuration={500}
+              animationEasing="ease-out"
             />
           </AreaChart>
         </ResponsiveContainer>
       )}
-    </div>
+    </motion.div>
   );
 };
 

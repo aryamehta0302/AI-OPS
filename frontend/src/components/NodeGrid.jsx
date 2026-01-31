@@ -1,3 +1,15 @@
+import { 
+  Wrench, 
+  AlertTriangle, 
+  TrendingUp, 
+  WifiOff, 
+  CheckCircle2,
+  Cpu,
+  HardDrive,
+  MemoryStick
+} from "lucide-react";
+import { motion } from "framer-motion";
+
 const NodeGrid = ({ nodes, onSelectNode }) => {
   const nodeList = Object.values(nodes);
 
@@ -60,7 +72,7 @@ const NodeGrid = ({ nodes, onSelectNode }) => {
 
   return (
     <div className="node-grid">
-      {nodeList.map((node) => {
+      {nodeList.map((node, index) => {
         const health = node.health || {};
         const prediction = node.prediction || {};
         const metrics = node.metrics || {};
@@ -68,10 +80,15 @@ const NodeGrid = ({ nodes, onSelectNode }) => {
         const agentStatus = getAgentStatus(node);
         
         return (
-          <div 
+          <motion.div 
             key={node.node_id} 
             className={`node-card ${getStatusClass(health.risk_level)} ${disconnected ? 'disconnected' : ''}`}
             onClick={() => onSelectNode(node.node_id)}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.05 }}
+            whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+            whileTap={{ scale: 0.98 }}
           >
             {/* Header */}
             <div className="node-card-header">
@@ -88,10 +105,10 @@ const NodeGrid = ({ nodes, onSelectNode }) => {
             {/* Agent Status Badge - NEW */}
             <div className={`node-agent-status ${getAgentStatusClass(agentStatus)}`}>
               <span className="agent-status-icon">
-                {agentStatus === "HEALING" ? "🔧" : 
-                 agentStatus === "DEGRADED" ? "⚠️" :
-                 agentStatus === "RECOVERING" ? "↑" :
-                 agentStatus === "OFFLINE" ? "⊘" : "✓"}
+                {agentStatus === "HEALING" ? <Wrench size={14} /> : 
+                 agentStatus === "DEGRADED" ? <AlertTriangle size={14} /> :
+                 agentStatus === "RECOVERING" ? <TrendingUp size={14} /> :
+                 agentStatus === "OFFLINE" ? <WifiOff size={14} /> : <CheckCircle2 size={14} />}
               </span>
               <span className="agent-status-label">{agentStatus}</span>
             </div>
@@ -139,7 +156,7 @@ const NodeGrid = ({ nodes, onSelectNode }) => {
             <div className="node-card-footer">
               VIEW DETAILS
             </div>
-          </div>
+          </motion.div>
         );
       })}
     </div>
